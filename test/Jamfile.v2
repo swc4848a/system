@@ -12,6 +12,8 @@ project
     : requirements
       <library>/boost/system//boost_system
       <toolset>msvc:<asynch-exceptions>on
+    : default-build  
+      [ supported-windows-api ]  
     ;
     
    lib throw_test

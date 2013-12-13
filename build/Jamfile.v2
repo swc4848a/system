@@ -9,6 +9,8 @@
 
 project boost/system
     : source-location ../src
+    : default-build  
+      [ supported-windows-api ]  
     : usage-requirements  # pass these requirement to dependents (i.e. users)
       <link>shared:<define>BOOST_SYSTEM_DYN_LINK=1
       <link>static:<define>BOOST_SYSTEM_STATIC_LINK=1

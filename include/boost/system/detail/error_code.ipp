@@ -22,7 +22,7 @@
 
 # if defined( BOOST_WINDOWS_API )
 #   include <windows.h>
-#   if !defined(WINAPI_FAMILY) || ((WINAPI_FAMILY & WINAPI_PARTITION_DESKTOP) != 0)
+#   if !defined( BOOST_WINAPI_FAMILY )
 #     include <boost/system/detail/local_free_on_destruction.hpp>
 #   endif
 #   ifndef ERROR_INCORRECT_SIZE
@@ -171,7 +171,7 @@ namespace
 #endif
 
 # if defined(BOOST_WINDOWS_API)
-#   if defined(WINAPI_FAMILY) && ((WINAPI_FAMILY & WINAPI_PARTITION_APP) != 0)
+#   if defined( BOOST_WINAPI_FAMILY )
     // When using the Windows Runtime, most system errors are reported as HRESULTs.
     // We want to map the common Win32 errors to their equivalent error condition,
     // whether or not they are reported via an HRESULT.
@@ -368,24 +368,24 @@ namespace
 
   std::string system_error_category::message( int ev ) const
   {
-# if defined(WINAPI_FAMILY) && ((WINAPI_FAMILY & WINAPI_PARTITION_DESKTOP) == 0)
-    std::string str( 128, char() );
+# if defined( BOOST_WINAPI_FAMILY )
+    std::wstring buf( 128, wchar_t() );
     for (;;)
     {
-      DWORD retval = ::FormatMessageA(
+      DWORD retval = ::FormatMessageW(
           FORMAT_MESSAGE_FROM_SYSTEM |
           FORMAT_MESSAGE_IGNORE_INSERTS,
           NULL,
           ev,
           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-          &str[0],
-          str.size(),
+          &buf[0],
+          buf.size(),
           NULL
       );
 
       if ( retval > 0 )
       {
-        str.resize( retval );
+        buf.resize( retval );
         break;
       }
       else if ( ::GetLastError() != ERROR_INSUFFICIENT_BUFFER )
@@ -394,9 +394,15 @@ namespace
       }
       else
       {
-        str.resize( str.size() + str.size()/2 );
+        buf.resize( buf.size() + buf.size()/2 );
       }
     }
+    int num_chars = (buf.size() + 1) * 2;
+    LPSTR narrow_buffer = (LPSTR)_alloca( num_chars );
+    if (::WideCharToMultiByte(CP_ACP, 0, buf.c_str(), -1, narrow_buffer, num_chars, NULL, NULL) == 0)
+        return std::string("Unknown error");
+
+    std::string str( narrow_buffer );
 # elif !defined(BOOST_NO_ANSI_APIS)
     LPVOID lpMsgBuf = 0;
     DWORD retval = ::FormatMessageA(

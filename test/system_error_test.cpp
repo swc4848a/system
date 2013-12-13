@@ -1,7 +1,8 @@
 //  system_error_test.cpp  ---------------------------------------------------//
 
 //  Copyright Beman Dawes 2006
-
+//  Copyright Steve Gates 2013.
+//  Portions Copyright (c) Microsoft Open Technologies, Inc.
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -39,20 +40,12 @@ namespace
     BOOST_TEST( ex.code().value() == v );
     BOOST_TEST( ex.code().category() == system_category() );
 # ifdef BOOST_WINDOWS_API
-    LANGID language_id;
-#   if !defined(__MINGW32__) && !defined(__CYGWIN__)
-      language_id = ::GetUserDefaultUILanguage();
-#   else
-      language_id = 0x0409; // Assume US English
-#   endif
+    LANGID language_id = 0x0409; // Assume US English
     // std::cout << "GetUserDefaultUILanguage() returns " << language_id << '\n';
-    if ( language_id == 0x0409 )  // English (United States)
-    {
-      BOOST_TEST( std::string( ex.what() ) == str );
-      if ( std::string( ex.what() ) != str )
-        std::cout << "expected \"" << str << "\", but what() returned \""
-          << ex.what() << "\"\n";
-    }
+    BOOST_TEST( std::string( ex.what() ) == str );
+    if ( std::string( ex.what() ) != str )
+      std::cout << "expected \"" << str << "\", but what() returned \""
+        << ex.what() << "\"\n";
 # endif
   }
 
